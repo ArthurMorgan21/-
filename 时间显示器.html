@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倒计时器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .time-display {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .time-input {
+            font-size: 18px;
+            margin: 5px;
+        }
+        .time-input input, .time-input select {
+            font-size: 18px;
+            padding: 5px;
+        }
+        .time-input label {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        .time-input button {
+            font-size: 18px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .time-box {
+            display: inline-block;
+            padding: 10px 20px;
+            border: 2px solid #000;
+            border-radius: 50px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="time-input">
+        <label for="time-source">选择当前时间来源：</label>
+        <select id="time-source" onchange="toggleTimeInput()">
+            <option value="system">系统时间</option>
+            <option value="custom">自定义时间</option>
+        </select>
+    </div>
+    <div class="time-input" id="current-time-input-container">
+        <label for="current-time-input">设置当前时间：</label>
+        <input type="datetime-local" id="current-time-input">
+        <button onclick="setCurrentTime()">设置</button>
+    </div>
+    <div class="time-input">
+        <label for="target-time-input">设置目标时间：</label>
+        <input type="datetime-local" id="target-time-input">
+        <button onclick="setTargetTime()">设置</button>
+    </div>
+    <div class="time-input">
+        <label for="show-seconds">显示秒针：</label>
+        <input type="checkbox" id="show-seconds" checked onchange="toggleSeconds()">
+    </div>
+    <div class="time-display">
+        <div><span id="current-time-label" contenteditable="true">当前时间：</span><span id="current-time" class="time-box"></span></div>
+        <div><span id="target-time-label" contenteditable="true">目标时间：</span><span id="target-time" class="time-box"></span></div>
+        <div><span id="remaining-time-label" contenteditable="true">剩余时间：</span><span id="remaining-time" class="time-box"></span></div>
+    </div>
+
+    <script>
+        // 更新当前时间
+        function updateCurrentTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleString();
+        }
+
+        // 更新剩余时间
+        function updateRemainingTime() {
+            const targetTime = new Date(document.getElementById('target-time').textContent);
+            const now = new Date();
+            const remainingTime = targetTime - now;
+            if (remainingTime > 0) {
+                const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+                document.getElementById('remaining-time').textContent = `${days}天 ${hours}小时 ${minutes}分钟 ${seconds}秒`;
+            } else {
+                const days = Math.floor(Math.abs(remainingTime) / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((Math.abs(remainingTime) % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((Math.abs(remainingTime) % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((Math.abs(remainingTime) % (1000 * 60)) / 1000);
+                document.getElementById('remaining-time').textContent = `${days}天 ${hours}小时 ${minutes}分钟 ${seconds}秒 (已过时)`;
+            }
+        }
+
+        // 设置当前时间
+        function setCurrentTime() {
+            const currentTimeInput = document.getElementById('current-time-input').value;
+            if (currentTimeInput) {
+                document.getElementById('current-time').textContent = new Date(currentTimeInput).toLocaleString();
+            } else {
+                updateCurrentTime();
+            }
+        }
+
+        // 设置目标时间
+        function setTargetTime() {
+            const targetTimeInput = document.getElementById('target-time-input').value;
+            if (targetTimeInput) {
+                document.getElementById('target-time').textContent = targetTimeInput.replace('T', ' ');
+                updateRemainingTime();
+            } else {
+                alert('请设置目标时间');
+            }
+        }
+
+        // 切换当前时间输入方式
+        function toggleTimeInput() {
+            const timeSource = document.getElementById('time-source').value;
+            const currentTimeInputContainer = document.getElementById('current-time-input-container');
+            if (timeSource === 'system') {
+                currentTimeInputContainer.style.display = 'none';
+                updateCurrentTime();
+                setInterval(updateCurrentTime, 1000);
+            } else {
+                currentTimeInputContainer.style.display = 'block';
+                clearInterval(updateCurrentTime);
+            }
+        }
+
+        // 切换秒针显示
+        function toggleSeconds() {
+            const showSeconds = document.getElementById('show-seconds').checked;
+            if (showSeconds) {
+                setInterval(updateCurrentTime, 1000);
+            } else {
+                clearInterval(updateCurrentTime);
+            }
+        }
+
+        // 初始化
+        function init() {
+            toggleTimeInput();
+            toggleSeconds();
+            setInterval(updateRemainingTime, 1000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
